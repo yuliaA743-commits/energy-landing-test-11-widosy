@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>VOLTIS — Енергонезалежність під ключ: сонце, вітер, накопичувачі</title>
+<meta name="description" content="Сонячні станції, вітрогенератори та накопичувачі енергії під ключ. Розрахунок, монтаж за 3-5 днів, сервіс 24/7. Світло у вашому домі не залежить від графіка відключень." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    /* === Палітра: нічне відключення → тепле світло === */
+    --bg: #0a1712;
+    --bg-alt: #0e1e17;
+    --surface: #142b21;
+    --surface-2: #1c3a2b;
+    --border: #274536;
+
+    --primary: #2c6e4a;
+    --primary-light: #49a06d;
+
+    --accent: #ffb238;       /* світло, що повернулось */
+    --accent-dim: #7a5a22;
+    --copper: #b5754a;       /* мідний провід */
+    --outage: #7a3a30;       /* блок відключення */
+    --power: #3f7a52;        /* блок живлення */
+
+    --text: #f3efe3;
+    --text-dim: #a9bdae;
+    --text-faint: #708278;
+
+    --font-head: 'Space Grotesk', sans-serif;
+    --font-body: 'Manrope', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    --radius: 14px;
+    --container: 1180px;
+    --ease: cubic-bezier(.22,.9,.32,1);
+  }
+
+  *,*::before,*::after{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  img{ max-width:100%; display:block; }
+  a{ color: inherit; text-decoration:none; }
+  ul{ margin:0; padding:0; list-style:none; }
+  h1,h2,h3,h4{ font-family: var(--font-head); margin:0; font-weight:600; letter-spacing:-0.01em; }
+  p{ margin:0; }
+  section{ position:relative; }
+  .container{ width:100%; max-width: var(--container); margin:0 auto; padding:0 24px; }
+  .eyebrow{
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display:flex; align-items:center; gap:10px;
+    margin-bottom: 18px;
+  }
+  .eyebrow::before{
+    content:'';
+    width:22px; height:1px;
+    background: var(--accent);
+    display:inline-block;
+  }
+  ::selection{ background: var(--accent); color: #1a1005; }
+
+  /* focus visibility */
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+  }
+
+  /* ============ CUSTOM CURSOR: ПРИЦІЛ ============ */
+  @media (pointer: fine){
+    body{ cursor:none; }
+    a, button, input, textarea, select, label{ cursor:none; }
+  }
+  #reticle{
+    position: fixed;
+    top:0; left:0;
+    width: 34px; height: 34px;
+    margin-left:-17px; margin-top:-17px;
+    pointer-events:none;
+    z-index: 9999;
+    transform: translate(var(--rx,0px), var(--ry,0px)) scale(var(--rs,1));
+    transition: transform .08s linear, opacity .2s ease;
+    mix-blend-mode: difference;
+    opacity:0;
+  }
+  #reticle.active{ opacity:1; }
+  #reticle svg{ width:100%; height:100%; display:block; }
+  #reticle .ring{ transition: r .18s var(--ease), stroke-width .18s var(--ease); }
+  #reticle.hover .ring{ r: 15; }
+  #reticle .dot{ transition: r .18s var(--ease); }
+  #reticle.hover .dot{ r: 0; }
+  #reticle .tick{ transition: opacity .18s var(--ease); }
+  #reticle.hover .tick{ opacity: 0; }
+
+  @media (pointer: coarse){ #reticle{ display:none; } }
+
+  /* ============ HEADER / NAV ============ */
+  .hero{
+    position: relative;
+    width:100%;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow:hidden;
+    display:flex;
+    flex-direction: column;
+  }
+  .hero-video{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit: cover;
+    object-position: center;
+    z-index:0;
+  }
+  .hero-overlay{
+    position:absolute; inset:0;
+    background:
+      radial-gradient(120% 90% at 50% 100%, rgba(10,23,18,.15) 0%, rgba(10,23,18,.85) 68%, rgba(10,23,18,.98) 100%),
+      linear-gradient(180deg, rgba(9,20,15,.72) 0%, rgba(9,20,15,.28) 32%, rgba(9,20,15,.5) 70%, rgba(9,20,15,.92) 100%);
+    z-index:1;
+  }
+  .hero-nav, .hero-content, .hero-foot{ position:relative; z-index:2; }
+
+  .hero-nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 22px 24px;
+    max-width: var(--container);
+    margin: 0 auto;
+    width:100%;
+  }
+  .logo{
+    display:flex; align-items:center; gap:10px;
+    font-family: var(--font-head); font-weight:700; font-size: 20px;
+    letter-spacing: 0.01em;
+    color: var(--text);
+  }
+  .logo svg{ width:26px; height:26px; }
+  .nav-links{
+    display:flex; align-items:center; gap: 30px;
+    font-size: 14.5px; color: var(--text-dim);
+  }
+  .nav-links a{
+    position:relative; padding: 4px 0;
+    transition: color .2s var(--ease);
+  }
+  .nav-links a::after{
+    content:''; position:absolute; left:0; bottom:0; height:1px; width:0;
+    background: var(--accent);
+    transition: width .25s var(--ease);
+  }
+  .nav-links a:hover{ color: var(--text); }
+  .nav-links a:hover::after{ width:100%; }
+  .nav-cta{ display:none; }
+  @media (min-width: 860px){ .nav-cta{ display:inline-flex; } }
+  .nav-burger{
+    display:flex; flex-direction:column; gap:5px;
+    background:none; border:none; padding:8px;
+  }
+  .nav-burger span{ width:22px; height:2px; background: var(--text); display:block; }
+  @media (min-width: 860px){ .nav-links{ display:flex; } .nav-burger{ display:none; } }
+  @media (max-width: 859px){ .nav-links{ display:none; } }
+
+  .hero-content{
+    flex:1;
+    display:flex; flex-direction:column; justify-content:center;
+    padding: 40px 24px 20px;
+    max-width: var(--container);
+    margin: 0 auto;
+    width:100%;
+  }
+  .hero-content h1{
+    font-size: clamp(2.2rem, 5.6vw, 4.4rem);
+    line-height: 1.06;
+    max-width: 15ch;
+    color: var(--text);
+    text-shadow: 0 4px 30px rgba(0,0,0,.45);
+  }
+  .hero-content h1 em{
+    font-style: normal;
+    color: var(--accent);
+  }
+  .hero-content .sub{
+    margin-top: 22px;
+    max-width: 46ch;
+    font-size: clamp(1rem, 1.6vw, 1.15rem);
+    color: var(--text-dim);
+    text-shadow: 0 2px 16px rgba(0,0,0,.5);
+  }
+  .hero-cta-row{
+    margin-top: 36px;
+    display:flex; flex-wrap:wrap; gap: 16px; align-items:center;
+  }
+
+  .hero-foot{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    padding: 0 24px 30px;
+    max-width: var(--container); margin:0 auto; width:100%;
+    gap: 20px;
+  }
+  .scroll-hint{
+    display:flex; align-items:center; gap:10px;
+    font-family: var(--font-mono); font-size:11.5px; letter-spacing:.1em;
+    color: var(--text-faint); text-transform:uppercase;
+  }
+  .scroll-hint .line{ width:1px; height:34px; background: linear-gradient(var(--text-faint), transparent); position:relative; overflow:hidden; }
+  .scroll-hint .line::after{
+    content:''; position:absolute; top:-100%; left:0; width:100%; height:100%;
+    background: var(--accent);
+    animation: scrollline 2.2s ease-in-out infinite;
+  }
+  @keyframes scrollline{ 0%{ top:-100%; } 60%{ top:100%; } 100%{ top:100%; } }
+
+  .hero-mini-stats{
+    display:flex; gap: 28px;
+    font-family: var(--font-mono);
+  }
+  .hero-mini-stats div{ text-align:right; }
+  .hero-mini-stats .n{ font-size: 20px; color: var(--accent); display:block; }
+  .hero-mini-stats .l{ font-size: 10.5px; color: var(--text-faint); text-transform:uppercase; letter-spacing:.08em; }
+  @media (max-width: 640px){ .hero-mini-stats{ display:none; } }
+
+  /* ============ BUTTONS ============ */
+  .btn{
+    position: relative;
+    display:inline-flex; align-items:center; gap:10px;
+    padding: 15px 26px;
+    border-radius: 999px;
+    font-family: var(--font-body); font-weight:700; font-size: 14.5px;
+    border: 1px solid transparent;
+    overflow:hidden;
+    isolation:isolate;
+    white-space:nowrap;
+  }
+  .btn::before{
+    content:'';
+    position:absolute; inset:0;
+    background: radial-gradient(120px circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,.28), transparent 60%);
+    opacity:0; transition: opacity .3s ease;
+    z-index:1;
+    pointer-events:none;
+  }
+  .btn:hover::before{ opacity:1; }
+  .btn span{ position:relative; z-index:2; display:inline-flex; align-items:center; gap:9px; }
+  .btn svg{ width:15px; height:15px; transition: transform .3s var(--ease); flex-shrink:0; }
+  .btn:hover svg{ transform: translate(3px,-3px); }
+  .btn-primary{
+    background: var(--accent);
+    color: #211405;
+    box-shadow: 0 0 0 0 rgba(255,178,56,.5);
+    transition: box-shadow .3s var(--ease), transform .2s var(--ease);
+  }
+  .btn-primary:hover{ box-shadow: 0 10px 34px -6px rgba(255,178,56,.55); transform: translateY(-2px); }
+  .btn-ghost{
+    background: rgba(255,255,255,.04);
+    color: var(--text);
+    border-color: rgba(243,239,227,.28);
+    backdrop-filter: blur(6px);
+    transition: border-color .3s ease, transform .2s var(--ease), background .3s ease;
+  }
+  .btn-ghost:hover{ border-color: var(--accent); background: rgba(255,255,255,.08); transform: translateY(-2px); }
+  .btn-block{ width:100%; justify-content:center; }
+  .btn-dark{ background: var(--bg); color: var(--text); border-color: var(--border); }
+  .btn-dark:hover{ border-color: var(--accent); }
+
+  /* ============ SECTION UTILITIES ============ */
+  .section{ padding: 108px 0; }
+  @media (max-width: 720px){ .section{ padding: 74px 0; } }
+  .section-head{
+    display:flex; justify-content:space-between; align-items:flex-end; gap: 30px;
+    margin-bottom: 56px;
+  }
+  .section-head h2{ font-size: clamp(1.7rem, 3.4vw, 2.6rem); max-width: 14ch; }
+  .section-head p{ color: var(--text-dim); max-width: 34ch; }
+
+  .divider{
+    display:block; width:100%; height: 64px; margin-top:-1px;
+  }
+
+  [data-reveal]{
+    opacity:0; transform: translateY(26px);
+    transition: opacity .8s var(--ease), transform .8s var(--ease);
+  }
+  [data-reveal].in-view{ opacity:1; transform: translateY(0); }
+
+  /* ============ PAIN / OUTAGE SCHEDULE ============ */
+  .pain{ background: var(--bg-alt); }
+  .pain-grid{ display:grid; grid-template-columns: 1.1fr 1fr; gap: 60px; align-items:center; }
+  @media (max-width: 900px){ .pain-grid{ grid-template-columns: 1fr; gap:44px; } }
+
+  .clock-card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+  .clock-card h4{ font-size: 15px; color: var(--text-dim); font-weight:600; margin-bottom:18px; font-family: var(--font-body); }
+  .hours{ display:grid; grid-template-columns: repeat(24,1fr); gap:3px; margin-bottom: 14px; }
+  .hours span{ height: 34px; border-radius:3px; background: var(--power); }
+  .hours span.off{ background: var(--outage); }
+  .hours-legend{ display:flex; gap:22px; font-size: 12.5px; color: var(--text-faint); font-family: var(--font-mono); }
+  .hours-legend i{ width:10px; height:10px; border-radius:2px; display:inline-block; margin-right:6px; vertical-align:-1px; }
+  .hours-legend .lg-off i{ background: var(--outage); }
+  .hours-legend .lg-on i{ background: var(--power); }
+
+  .pain-stats{ display:grid; grid-template-columns: repeat(2,1fr); gap: 18px; margin-top: 28px; }
+  .pain-stat{ border-top: 1px solid var(--border); padding-top: 14px; }
+  .pain-stat .n{ font-family: var(--font-mono); font-size: 28px; color: var(--accent); }
+  .pain-stat .l{ font-size: 13px; color: var(--text-faint); margin-top:4px; }
+
+  .pain-copy h2{ margin-bottom: 20px; }
+  .pain-copy > p{ color: var(--text-dim); margin-bottom: 30px; max-width: 48ch; }
+  .pain-list{ display:flex; flex-direction:column; gap:16px; }
+  .pain-list li{ display:flex; gap:14px; align-items:flex-start; color: var(--text-dim); font-size:15px; }
+  .pain-list li svg{ flex-shrink:0; width:18px; height:18px; margin-top:3px; color: var(--outage); }
+
+  /* ============ SOLUTIONS (asymmetric grid) ============ */
+  .solutions-grid{
+    display:grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 18px;
+  }
+  .sol-card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 30px;
+    grid-column: span 3;
+    position:relative;
+    overflow:hidden;
+    transition: border-color .3s ease, transform .3s var(--ease);
+  }
+  .sol-card:hover{ border-color: var(--primary-light); transform: translateY(-4px); }
+  .sol-card.big{ grid-column: span 4; padding: 40px; }
+  .sol-card.small{ grid-column: span 2; }
+  @media (max-width: 900px){
+    .sol-card, .sol-card.big, .sol-card.small{ grid-column: span 6; }
+  }
+  .sol-card .icon{
+    width:48px; height:48px; border-radius:12px;
+    background: var(--surface-2);
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom: 22px;
+    color: var(--accent);
+  }
+  .sol-card .icon svg{ width:24px; height:24px; }
+  .sol-card h3{ font-size: 20px; margin-bottom: 10px; }
+  .sol-card p{ color: var(--text-dim); font-size: 14.5px; }
+  .sol-card .tag{
+    position:absolute; top:24px; right:24px;
+    font-family: var(--font-mono); font-size:11px; color: var(--text-faint);
+    text-transform:uppercase; letter-spacing:.08em;
+  }
+  .sol-card ul{ margin-top:16px; display:flex; flex-direction:column; gap:8px; }
+  .sol-card ul li{ font-size: 13.5px; color: var(--text-faint); padding-left:16px; position:relative; }
+  .sol-card ul li::before{ content:'—'; position:absolute; left:0; color: var(--copper); }
+
+  /* ============ PROCESS (circuit path) ============ */
+  .process{ background: var(--bg-alt); }
+  .circuit{ position:relative; }
+  .circuit-line{ display:block; width:100%; height:auto; margin-bottom: -10px; }
+  .steps{ display:grid; grid-template-columns: repeat(4,1fr); gap: 24px; }
+  @media (max-width:900px){ .steps{ grid-template-columns: 1fr; } .circuit-line{ display:none; } }
+  .step{ position:relative; }
+  .step .idx{
+    font-family: var(--font-mono); font-size: 13px; color: var(--bg);
+    background: var(--accent);
+    width:34px; height:34px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom: 20px;
+  }
+  .step h4{ font-size: 17px; margin-bottom:8px; }
+  .step p{ color: var(--text-dim); font-size: 14px; }
+
+  /* ============ CALCULATOR / METER (signature) ============ */
+  .meter-wrap{
+    background: linear-gradient(155deg, var(--surface), var(--bg-alt));
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 48px;
+    display:grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items:center;
+    position:relative;
+    overflow:hidden;
+  }
+  @media (max-width: 900px){ .meter-wrap{ grid-template-columns:1fr; padding: 30px; gap:36px; } }
+  .meter-wrap::before{
+    content:'';
+    position:absolute; top:-30%; right:-10%;
+    width:60%; height:160%;
+    background: radial-gradient(circle, rgba(255,178,56,.10), transparent 65%);
+    pointer-events:none;
+  }
+  .meter-controls label{
+    display:block; font-family: var(--font-mono); font-size: 12px; letter-spacing:.08em;
+    text-transform:uppercase; color: var(--text-faint); margin-bottom: 12px;
+  }
+  .meter-controls input[type=range]{
+    width:100%; appearance:none; -webkit-appearance:none;
+    height:4px; border-radius:3px; background: var(--surface-2); outline:none; margin-bottom: 8px;
+  }
+  .meter-controls input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none;
+    width:22px; height:22px; border-radius:50%;
+    background: var(--accent); border: 3px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--accent);
+    cursor:none;
+  }
+  .meter-controls input[type=range]::-moz-range-thumb{
+    width:22px; height:22px; border-radius:50%; border:3px solid var(--bg);
+    background: var(--accent); box-shadow: 0 0 0 1px var(--accent); cursor:none;
+  }
+  .meter-value-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 30px; }
+  .meter-value-row .val{ font-family: var(--font-mono); color: var(--accent); font-size: 22px; }
+  .meter-controls .hint{ font-size: 13px; color: var(--text-faint); margin-top: 26px; line-height:1.6; }
+
+  .meter-display{
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 30px;
+  }
+  .meter-row{ display:flex; justify-content:space-between; align-items:center; padding: 16px 0; border-bottom: 1px dashed var(--border); }
+  .meter-row:last-child{ border-bottom:none; }
+  .meter-row .lbl{ font-size: 13.5px; color: var(--text-dim); }
+  .meter-row .digits{
+    font-family: var(--font-mono); font-size: 26px; color: var(--accent);
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .meter-row .unit{ font-size: 13px; color: var(--text-faint); margin-left:4px; }
+
+  /* ============ PROOF ============ */
+  .stats-row{
+    display:grid; grid-template-columns: repeat(4,1fr); gap: 18px;
+    margin-bottom: 60px;
+  }
+  @media (max-width: 760px){ .stats-row{ grid-template-columns: repeat(2,1fr); } }
+  .stat-box{ border-top: 1px solid var(--border); padding-top: 16px; }
+  .stat-box .n{ font-family: var(--font-mono); font-size: clamp(28px,4vw,40px); color: var(--text); }
+  .stat-box .n em{ font-style:normal; color: var(--accent); }
+  .stat-box .l{ color: var(--text-faint); font-size: 13px; margin-top:6px; }
+
+  .testi-scroller{
+    display:flex; gap: 20px; overflow-x:auto; padding-bottom: 20px;
+    scroll-snap-type: x mandatory;
+    margin: 0 -24px; padding-left:24px; padding-right:24px;
+  }
+  .testi-scroller::-webkit-scrollbar{ height:5px; }
+  .testi-scroller::-webkit-scrollbar-thumb{ background: var(--border); border-radius: 3px; }
+  .testi-card{
+    scroll-snap-align:start;
+    min-width: 320px; max-width: 340px;
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    flex-shrink:0;
+  }
+  .testi-card p{ color: var(--text-dim); font-size: 14.5px; margin-bottom: 24px; }
+  .testi-who{ display:flex; align-items:center; gap: 12px; }
+  .testi-avatar{
+    width:38px; height:38px; border-radius:50%;
+    background: var(--surface-2);
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--font-mono); font-size:13px; color:var(--accent);
+  }
+  .testi-who .name{ font-size:13.5px; font-weight:700; }
+  .testi-who .role{ font-size:12px; color: var(--text-faint); }
+
+  /* ============ LEAD FORM ============ */
+  .lead{ background: var(--bg-alt); }
+  .lead-wrap{ display:grid; grid-template-columns: .9fr 1.1fr; gap: 60px; }
+  @media (max-width: 900px){ .lead-wrap{ grid-template-columns:1fr; gap:40px; } }
+  .lead-copy h2{ margin-bottom:20px; }
+  .lead-copy p{ color: var(--text-dim); max-width: 40ch; margin-bottom: 30px; }
+  .lead-points{ display:flex; flex-direction:column; gap:16px; }
+  .lead-points li{ display:flex; gap:12px; align-items:flex-start; font-size:14.5px; color: var(--text-dim); }
+  .lead-points svg{ width:18px; height:18px; color: var(--accent); flex-shrink:0; margin-top:2px; }
+
+  .hidden-field{ position:absolute; left:-9999px; top:-9999px; }
+
+  form.lead-form{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 36px;
+  }
+  .form-row{ display:grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px){ .form-row{ grid-template-columns: 1fr; } }
+  .field{ margin-bottom: 18px; }
+  .field label{
+    display:block; font-size: 12.5px; font-family: var(--font-mono);
+    text-transform:uppercase; letter-spacing:.06em; color: var(--text-faint); margin-bottom: 8px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%; background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 13px 14px;
+    color: var(--text);
+    font-family: var(--font-body); font-size: 14.5px;
+    transition: border-color .2s ease;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{ border-color: var(--accent); }
+  .field textarea{ resize: vertical; min-height: 90px; }
+  .consent{ font-size: 12px; color: var(--text-faint); margin-top: 14px; line-height:1.5; }
+
+  .form-msg{
+    display:none; align-items:center; gap:10px;
+    padding: 14px 16px; border-radius:10px; margin-bottom: 18px;
+    font-size: 14px;
+  }
+  .form-msg.show{ display:flex; }
+  .form-msg.ok{ background: rgba(63,122,82,.18); border:1px solid var(--power); color: #b9e6c4; }
+  .form-msg.err{ background: rgba(122,58,48,.18); border:1px solid var(--outage); color: #f0bdb2; }
+
+  /* ============ FAQ ============ */
+  .faq-item{
+    border-bottom: 1px solid var(--border);
+  }
+  .faq-q{
+    width:100%; display:flex; justify-content:space-between; align-items:center;
+    padding: 24px 0; background:none; border:none; text-align:left;
+    color: var(--text); font-family: var(--font-head); font-size: 17px; font-weight:600;
+  }
+  .faq-q svg{ width:18px; height:18px; flex-shrink:0; transition: transform .3s var(--ease); color: var(--accent); }
+  .faq-item.open .faq-q svg{ transform: rotate(45deg); }
+  .faq-a{
+    max-height:0; overflow:hidden;
+    transition: max-height .4s var(--ease), padding .4s var(--ease);
+  }
+  .faq-a p{ color: var(--text-dim); font-size: 14.5px; padding-bottom: 24px; max-width: 62ch; }
+  .faq-item.open .faq-a{ max-height: 220px; }
+
+  /* ============ FOOTER ============ */
+  footer{ background: var(--bg); border-top: 1px solid var(--border); padding: 60px 0 30px; }
+  .foot-grid{ display:grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 40px; margin-bottom: 50px; }
+  @media (max-width: 760px){ .foot-grid{ grid-template-columns: 1fr 1fr; } }
+  .foot-brand p{ color: var(--text-faint); font-size: 13.5px; margin-top:14px; max-width:32ch; }
+  .foot-col h5{ font-family: var(--font-mono); font-size: 11.5px; text-transform:uppercase; letter-spacing:.08em; color: var(--text-faint); margin-bottom: 16px; }
+  .foot-col ul{ display:flex; flex-direction:column; gap:10px; }
+  .foot-col a{ font-size: 14px; color: var(--text-dim); transition: color .2s ease; }
+  .foot-col a:hover{ color: var(--accent); }
+  .foot-bottom{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; padding-top: 26px; border-top: 1px solid var(--border); }
+  .foot-bottom p{ font-size: 12.5px; color: var(--text-faint); }
+  .social{ display:flex; gap: 14px; }
+  .social a{
+    width:36px; height:36px; border-radius:50%; border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    transition: border-color .2s ease, color .2s ease;
+    color: var(--text-dim);
+  }
+  .social a:hover{ border-color: var(--accent); color: var(--accent); }
+  .social svg{ width:16px; height:16px; }
+</style>
+</head>
+<body>
+
+<div id="reticle" aria-hidden="true">
+  <svg viewBox="0 0 34 34">
+    <circle class="ring" cx="17" cy="17" r="9" fill="none" stroke="currentColor" stroke-width="1.2" style="color:#f3efe3"/>
+    <circle class="dot" cx="17" cy="17" r="1.6" fill="#f3efe3"/>
+    <line class="tick" x1="17" y1="1" x2="17" y2="6" stroke="#f3efe3" stroke-width="1"/>
+    <line class="tick" x1="17" y1="28" x2="17" y2="33" stroke="#f3efe3" stroke-width="1"/>
+    <line class="tick" x1="1" y1="17" x2="6" y2="17" stroke="#f3efe3" stroke-width="1"/>
+    <line class="tick" x1="28" y1="17" x2="33" y2="17" stroke="#f3efe3" stroke-width="1"/>
+  </svg>
+</div>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero" id="hero">
+  <video
+    class="hero-video"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="auto"
+    poster="https://res.cloudinary.com/n4xtnfy1/video/upload/v1786080342/gemini_generated_video_5d2ced1f_azd7ev.jpg"
+  >
+    <source src="https://res.cloudinary.com/n4xtnfy1/video/upload/v1786080342/gemini_generated_video_5d2ced1f_azd7ev.mp4" type="video/mp4" />
+  </video>
+  <div class="hero-overlay"></div>
+
+  <nav class="hero-nav">
+    <a href="#hero" class="logo">
+      <svg viewBox="0 0 26 26" fill="none"><path d="M14.5 1 4 15h7l-1.5 10L23 10h-8l1.5-9z" fill="#ffb238"/></svg>
+      VOLTIS
+    </a>
+    <div class="nav-links">
+      <a href="#solutions">Рішення</a>
+      <a href="#process">Як це працює</a>
+      <a href="#calculator">Розрахунок</a>
+      <a href="#proof">Відгуки</a>
+      <a href="#lead-form">Контакти</a>
+    </div>
+    <a href="#lead-form" class="btn btn-ghost nav-cta magnetic"><span>Отримати розрахунок</span></a>
+    <button class="nav-burger" aria-label="Меню" onclick="document.querySelector('.nav-links').style.display='flex'; document.querySelector('.nav-links').style.cssText='display:flex;position:absolute;top:70px;right:24px;background:#142b21;border:1px solid #274536;border-radius:12px;flex-direction:column;padding:18px 22px;gap:14px;'">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="hero-content">
+    <div class="eyebrow">Енергонезалежність · монтаж по всій Україні</div>
+    <h1>Світло у&nbsp;вашому домі більше <em>не залежить</em> від графіка відключень</h1>
+    <p class="sub">Сонячні станції, вітрогенератори та накопичувачі під ключ: аудит, проєкт, монтаж за 3–5 днів і моніторинг 24/7. Один партнер — від розрахунку до розетки.</p>
+    <div class="hero-cta-row">
+      <a href="#calculator" class="btn btn-primary magnetic"><span>Розрахувати вашу систему <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a>
+      <a href="#proof" class="btn btn-ghost magnetic"><span>Наші об'єкти</span></a>
+    </div>
+  </div>
+
+  <div class="hero-foot">
+    <div class="scroll-hint"><div class="line"></div>гортайте</div>
+    <div class="hero-mini-stats">
+      <div><span class="n">340+</span><span class="l">систем змонтовано</span></div>
+      <div><span class="n">12</span><span class="l">областей</span></div>
+      <div><span class="n">8 років</span><span class="l">на ринку</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== PAIN / OUTAGE CONTEXT ===================== -->
+<section class="pain section" id="context">
+  <div class="container">
+    <div class="pain-grid">
+      <div class="pain-copy" data-reveal>
+        <div class="eyebrow">Знайомий сценарій</div>
+        <h2>Графік відключень — це вже частина щоденного побуту</h2>
+        <p>Генератор гуркотить під вікном, продукти в холодильнику під загрозою, а робота зупиняється рівно тоді, коли зникає світло. Це можна виправити один раз — і забути.</p>
+        <ul class="pain-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span>Пальне для генератора з'їдає до 6500 ₴ щомісяця в опалювальний сезон</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span>Гучний генератор не рятує від тиші — сусіди, сон, робочі дзвінки</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span>Ресурс генератора вичерпується за 1–2 сезони інтенсивної роботи</span></li>
+        </ul>
+      </div>
+      <div data-reveal>
+        <div class="clock-card">
+          <h4>Типовий графік у пікові періоди — 24 години</h4>
+          <div class="hours" id="hoursGrid"></div>
+          <div class="hours-legend">
+            <span class="lg-off"><i></i>без світла</span>
+            <span class="lg-on"><i></i>зі світлом</span>
+          </div>
+          <div class="pain-stats">
+            <div class="pain-stat"><div class="n">4–6 год</div><div class="l">типова тривалість відключення</div></div>
+            <div class="pain-stat"><div class="n">72 год</div><div class="l">автономність з накопичувачем VOLTIS</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SOLUTIONS ===================== -->
+<section class="section" id="solutions">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <h2>Що ми проєктуємо і монтуємо</h2>
+      <p>Кожне рішення підбирається під споживання вашого будинку чи бізнесу, а не навпаки.</p>
+    </div>
+    <div class="solutions-grid">
+      <div class="sol-card big" data-reveal>
+        <span class="tag">01 · найпопулярніше</span>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></div>
+        <h3>Сонячні електростанції</h3>
+        <p>Мережеві та гібридні станції на дах чи опору. Окупність за рахунок економії тарифу і зеленого доходу.</p>
+        <ul>
+          <li>Потужність від 3 до 30 кВт</li>
+          <li>Панелі з гарантією 25 років</li>
+          <li>Робота навіть у похмуру погоду</li>
+        </ul>
+      </div>
+      <div class="sol-card" data-reveal>
+        <span class="tag">02</span>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v16M4 8c3-3 6 3 9 0s6 3 7 0"/></svg></div>
+        <h3>Вітрогенератори</h3>
+        <p>Для ділянок зі стабільним вітром — працюють вночі та в негоду, коли сонця немає.</p>
+      </div>
+      <div class="sol-card" data-reveal>
+        <span class="tag">03</span>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M10 7h4M9 21v1M15 21v1"/></svg></div>
+        <h3>Накопичувачі енергії</h3>
+        <p>Літій-залізо-фосфатні батареї з ресурсом понад 6000 циклів для автономності під час відключень.</p>
+      </div>
+      <div class="sol-card small" data-reveal>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg></div>
+        <h3>Гібридні системи</h3>
+        <p>Сонце + вітер + накопичувач в одному контурі керування.</p>
+      </div>
+      <div class="sol-card small" data-reveal>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V4M6 10l6-6 6 6M6 20h12"/></svg></div>
+        <h3>Заземлення й УЗІП</h3>
+        <p>Захист обладнання від перенапруги та грози.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PROCESS ===================== -->
+<section class="process section" id="process">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <h2>Шлях від заявки до автономності</h2>
+      <p>Чотири кроки, які ми проходимо разом — без затримок і без сюрпризів у кошторисі.</p>
+    </div>
+    <div class="circuit" data-reveal>
+      <svg class="circuit-line" viewBox="0 0 1180 40" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M60 20 H1120" stroke="#274536" stroke-width="2" stroke-dasharray="2 10" fill="none"/>
+      </svg>
+      <div class="steps">
+        <div class="step">
+          <div class="idx">1</div>
+          <h4>Аудит споживання</h4>
+          <p>Аналізуємо рахунки за електроенергію та профіль навантаження вашого об'єкта.</p>
+        </div>
+        <div class="step">
+          <div class="idx">2</div>
+          <h4>Проєкт і кошторис</h4>
+          <p>Підбираємо потужність станції, тип батарей та термін окупності — фіксуємо ціну.</p>
+        </div>
+        <div class="step">
+          <div class="idx">3</div>
+          <h4>Монтаж за 3–5 днів</h4>
+          <p>Власна монтажна бригада, узгодження з обленерго, повний пакет документів.</p>
+        </div>
+        <div class="step">
+          <div class="idx">4</div>
+          <h4>Моніторинг 24/7</h4>
+          <p>Стежимо за роботою системи через застосунок і виїжджаємо на сервіс за потреби.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CALCULATOR / METER ===================== -->
+<section class="section" id="calculator">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <h2>Порахуйте систему за 10 секунд</h2>
+      <p>Орієнтовний розрахунок на основі вашого середнього рахунку за електроенергію.</p>
+    </div>
+    <div class="meter-wrap" data-reveal>
+      <div class="meter-controls">
+        <div class="meter-value-row">
+          <label style="margin:0;">Середній рахунок за місяць</label>
+          <span class="val" id="billOut">3 000 ₴</span>
+        </div>
+        <input type="range" id="billSlider" min="800" max="15000" step="100" value="3000" />
+        <div class="hours-legend"><span>800 ₴</span><span style="margin-left:auto">15 000 ₴</span></div>
+        <p class="hint">Розрахунок орієнтовний і не враховує індивідуальні особливості об'єкта — точну конфігурацію ми визначимо після безкоштовного аудиту.</p>
+      </div>
+      <div class="meter-display">
+        <div class="meter-row"><span class="lbl">Рекомендована потужність станції</span><span class="digits" id="outKw">3.4<span class="unit">кВт</span></span></div>
+        <div class="meter-row"><span class="lbl">Ємність накопичувача</span><span class="digits" id="outBat">7.2<span class="unit">кВт·год</span></span></div>
+        <div class="meter-row"><span class="lbl">Автономність без мережі</span><span class="digits" id="outAutonomy">~18<span class="unit">год</span></span></div>
+        <div class="meter-row"><span class="lbl">Орієнтовна окупність</span><span class="digits" id="outPayback">4.8<span class="unit">роки</span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PROOF ===================== -->
+<section class="section" id="proof">
+  <div class="container">
+    <div class="stats-row" data-reveal>
+      <div class="stat-box"><div class="n"><em>340+</em></div><div class="l">систем змонтовано з 2017 року</div></div>
+      <div class="stat-box"><div class="n"><em>12</em></div><div class="l">областей України</div></div>
+      <div class="stat-box"><div class="n"><em>4.9</em>/5</div><div class="l">середня оцінка клієнтів</div></div>
+      <div class="stat-box"><div class="n"><em>24</em>/7</div><div class="l">моніторинг і сервіс</div></div>
+    </div>
+
+    <div class="section-head" data-reveal>
+      <h2>Що кажуть власники систем</h2>
+      <p>Реальні відгуки клієнтів, які вже пройшли шлях до автономності.</p>
+    </div>
+
+    <div class="testi-scroller" data-reveal>
+      <div class="testi-card">
+        <p>"Взимку під час найдовших відключень у нас єдиних на вулиці горіло світло. Батарея тримає холодильник і роутер більше доби."</p>
+        <div class="testi-who"><div class="testi-avatar">ОК</div><div><div class="name">Олег К.</div><div class="role">приватний будинок, Київська обл.</div></div></div>
+      </div>
+      <div class="testi-card">
+        <p>"Монтаж зайняв чотири дні, як і обіцяли. Команда прибрала за собою і показала, як користуватись застосунком моніторингу."</p>
+        <div class="testi-who"><div class="testi-avatar">НС</div><div><div class="name">Наталія С.</div><div class="role">кав'ярня, Львів</div></div></div>
+      </div>
+      <div class="testi-card">
+        <p>"Обрали гібридну систему з вітрогенератором — восени, коли сонця мало, саме вітер тримає баланс. Окупність йде за графіком."</p>
+        <div class="testi-who"><div class="testi-avatar">РП</div><div><div class="name">Роман П.</div><div class="role">фермерське господарство, Полтавщина</div></div></div>
+      </div>
+      <div class="testi-card">
+        <p>"Виробництво не зупиняється навіть у чергу відключень — станція покриває критичне обладнання цеху повністю."</p>
+        <div class="testi-who"><div class="testi-avatar">ІМ</div><div><div class="name">Ігор М.</div><div class="role">невелике виробництво, Вінниця</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== LEAD FORM ===================== -->
+<section class="lead section" id="lead-form-section">
+  <div class="container">
+    <div class="lead-wrap">
+      <div class="lead-copy" data-reveal>
+        <div class="eyebrow">Безкоштовний аудит</div>
+        <h2>Отримайте розрахунок вашої системи протягом доби</h2>
+        <p>Залиште контакти — інженер зателефонує, уточнить споживання і надішле попередній кошторис із варіантами конфігурації.</p>
+        <ul class="lead-points">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg><span>Аудит і розрахунок — безкоштовно, без зобов'язань</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg><span>Фіксована ціна в договорі, без прихованих доплат</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg><span>Гарантія на обладнання та монтажні роботи</span></li>
+        </ul>
+      </div>
+
+      <div data-reveal>
+        <!-- Netlify Forms: форма автоматично реєструється при деплої завдяки data-netlify="true" -->
+        <div class="form-msg ok" id="msgOk">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+          <span>Дякуємо! Заявку отримано — інженер зв'яжеться з вами протягом доби.</span>
+        </div>
+        <div class="form-msg err" id="msgErr">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+          <span>Щось пішло не так. Спробуйте ще раз або зателефонуйте нам напряму.</span>
+        </div>
+
+        <form
+          name="lead-form"
+          method="POST"
+          data-netlify="true"
+          netlify-honeypot="bot-field"
+          action="/success.html"
+          id="leadForm"
+        >
+          <input type="hidden" name="form-name" value="lead-form" />
+          <p class="hidden-field">
+            <label>Не заповнюйте це поле: <input name="bot-field" /></label>
+          </p>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="f-name">Ім'я</label>
+              <input id="f-name" name="name" type="text" placeholder="Ваше ім'я" required />
+            </div>
+            <div class="field">
+              <label for="f-phone">Телефон</label>
+              <input id="f-phone" name="phone" type="tel" placeholder="+380 __ ___ __ __" required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="f-email">Email (опційно)</label>
+            <input id="f-email" name="email" type="email" placeholder="name@example.com" />
+          </div>
+
+          <div class="field">
+            <label for="f-type">Тип об'єкта</label>
+            <select id="f-type" name="object_type">
+              <option>Приватний будинок</option>
+              <option>Квартира</option>
+              <option>Бізнес / офіс</option>
+              <option>Виробництво / ферма</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="f-msg">Коментар</label>
+            <textarea id="f-msg" name="message" placeholder="Орієнтовне споживання, побажання щодо типу системи..."></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block magnetic">
+            <span>Надіслати заявку <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
+          </button>
+          <p class="consent">Надсилаючи форму, ви погоджуєтесь на обробку контактних даних для зв'язку щодо заявки.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FAQ ===================== -->
+<section class="section" id="faq">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <h2>Питання, які запитують найчастіше</h2>
+      <p>Не знайшли відповідь — напишіть нам, відповідаємо протягом години.</p>
+    </div>
+    <div data-reveal>
+      <div class="faq-item open">
+        <button class="faq-q">Скільки коштує сонячна станція під ключ?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+        <div class="faq-a"><p>Вартість залежить від потужності та типу системи. Орієнтовну цифру ви побачите в калькуляторі вище, а точний кошторис — після безкоштовного аудиту вашого об'єкта.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Чи працює станція взимку і в похмуру погоду?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+        <div class="faq-a"><p>Так, панелі виробляють електроенергію навіть у хмарну погоду, хоча й з меншою ефективністю. Для стабільної роботи взимку рекомендуємо гібридну конфігурацію з накопичувачем або вітрогенератором.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Яка гарантія на обладнання та монтаж?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+        <div class="faq-a"><p>На панелі — до 25 років, на інвертори та накопичувачі — від 5 до 10 років залежно від виробника. На монтажні роботи ми даємо власну гарантію 3 роки.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Скільки триває монтаж?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+        <div class="faq-a"><p>Для типового приватного будинку — 3–5 робочих днів від початку монтажу до підключення й тестування системи.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Чи можна оформити розстрочку?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+        <div class="faq-a"><p>Так, ми співпрацюємо з кількома банками-партнерами і допомагаємо оформити розстрочку або кредит на обладнання під час консультації.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a href="#hero" class="logo">
+          <svg viewBox="0 0 26 26" fill="none"><path d="M14.5 1 4 15h7l-1.5 10L23 10h-8l1.5-9z" fill="#ffb238"/></svg>
+          VOLTIS
+        </a>
+        <p>Сонячні станції, вітрогенератори та накопичувачі під ключ. Проєктуємо і монтуємо по всій Україні з 2017 року.</p>
+      </div>
+      <div class="foot-col">
+        <h5>Рішення</h5>
+        <ul>
+          <li><a href="#solutions">Сонячні станції</a></li>
+          <li><a href="#solutions">Вітрогенератори</a></li>
+          <li><a href="#solutions">Накопичувачі</a></li>
+          <li><a href="#solutions">Гібридні системи</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h5>Компанія</h5>
+        <ul>
+          <li><a href="#process">Як це працює</a></li>
+          <li><a href="#proof">Відгуки</a></li>
+          <li><a href="#faq">Питання</a></li>
+          <li><a href="#lead-form-section">Контакти</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h5>Контакти</h5>
+        <ul>
+          <li><a href="tel:+380671234567">+380 67 123 45 67</a></li>
+          <li><a href="mailto:hello@voltis.ua">hello@voltis.ua</a></li>
+          <li><span style="color:var(--text-dim); font-size:14px;">Київ, вул. Енергетична, 12</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <p>© <span id="year"></span> VOLTIS. Усі права захищені.</p>
+      <div class="social">
+        <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></a>
+        <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9h3V6h-3a4 4 0 0 0-4 4v2H8v3h2v6h3v-6h3l1-3h-4v-2a1 1 0 0 1 1-1Z"/></svg></a>
+        <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  /* ---------- Custom cursor: приціл ---------- */
+  var reticle = document.getElementById('reticle');
+  var isFine = window.matchMedia('(pointer: fine)').matches;
+  if (isFine && reticle){
+    window.addEventListener('mousemove', function(e){
+      reticle.style.setProperty('--rx', e.clientX + 'px');
+      reticle.style.setProperty('--ry', e.clientY + 'px');
+      reticle.classList.add('active');
+    }, { passive:true });
+
+    document.addEventListener('mouseleave', function(){ reticle.classList.remove('active'); });
+
+    var hoverTargets = 'a, button, input, textarea, select, .magnetic, .faq-q';
+    document.addEventListener('mouseover', function(e){
+      if (e.target.closest(hoverTargets)) reticle.classList.add('hover');
+    });
+    document.addEventListener('mouseout', function(e){
+      if (e.target.closest(hoverTargets)) reticle.classList.remove('hover');
+    });
+  }
+
+  /* ---------- Magnetic + spotlight buttons ---------- */
+  document.querySelectorAll('.btn').forEach(function(btn){
+    btn.addEventListener('mousemove', function(e){
+      var r = btn.getBoundingClientRect();
+      var mx = e.clientX - r.left, my = e.clientY - r.top;
+      btn.style.setProperty('--mx', mx + 'px');
+      btn.style.setProperty('--my', my + 'px');
+      var dx = (mx - r.width/2) * 0.12;
+      var dy = (my - r.height/2) * 0.28;
+      btn.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+    });
+    btn.addEventListener('mouseleave', function(){ btn.style.transform = ''; });
+  });
+
+  /* ---------- Outage hours grid (illustrative) ---------- */
+  var offHours = [6,7,8,9,18,19,20,21];
+  var grid = document.getElementById('hoursGrid');
+  for (var h = 0; h < 24; h++){
+    var s = document.createElement('span');
+    if (offHours.indexOf(h) !== -1) s.className = 'off';
+    grid.appendChild(s);
+  }
+
+  /* ---------- Scroll reveal ---------- */
+  var reveals = document.querySelectorAll('[data-reveal]');
+  if ('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting){ en.target.classList.add('in-view'); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.14 });
+    reveals.forEach(function(el){ io.observe(el); });
+  } else {
+    reveals.forEach(function(el){ el.classList.add('in-view'); });
+  }
+
+  /* ---------- FAQ accordion ---------- */
+  document.querySelectorAll('.faq-q').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var item = btn.closest('.faq-item');
+      var wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(function(o){ o.classList.remove('open'); });
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+
+  /* ---------- Calculator / meter ---------- */
+  var slider = document.getElementById('billSlider');
+  var billOut = document.getElementById('billOut');
+  var outKw = document.getElementById('outKw');
+  var outBat = document.getElementById('outBat');
+  var outAutonomy = document.getElementById('outAutonomy');
+  var outPayback = document.getElementById('outPayback');
+
+  function fmt(n){ return new Intl.NumberFormat('uk-UA').format(n); }
+
+  function updateMeter(){
+    var bill = parseInt(slider.value, 10);
+    billOut.textContent = fmt(bill) + ' ₴';
+
+    var kw = Math.max(1.5, (bill / 900));
+    var bat = kw * 2.1;
+    var autonomy = Math.round((bat / (kw*0.42)) * 4);
+    var payback = Math.max(2.6, 9 - (bill / 2600));
+
+    outKw.innerHTML = kw.toFixed(1) + '<span class="unit">кВт</span>';
+    outBat.innerHTML = bat.toFixed(1) + '<span class="unit">кВт·год</span>';
+    outAutonomy.innerHTML = '~' + autonomy + '<span class="unit">год</span>';
+    outPayback.innerHTML = payback.toFixed(1) + '<span class="unit">роки</span>';
+  }
+  slider.addEventListener('input', updateMeter);
+  updateMeter();
+
+  /* ---------- Netlify AJAX form submit ---------- */
+  var form = document.getElementById('leadForm');
+  var msgOk = document.getElementById('msgOk');
+  var msgErr = document.getElementById('msgErr');
+
+  function encode(data){
+    return new URLSearchParams(data).toString();
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    msgOk.classList.remove('show');
+    msgErr.classList.remove('show');
+
+    var data = new FormData(form);
+    fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: encode(Object.fromEntries(data))
+    })
+      .then(function(){
+        form.reset();
+        msgOk.classList.add('show');
+        msgOk.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      })
+      .catch(function(err){
+        msgErr.classList.add('show');
+        console.error(err);
+      });
+  });
+
+})();
+</script>
+</body>
+</html>
